@@ -1,4 +1,4 @@
-#include <utility>
+#include <functional>
 
 namespace acsl {
 template<typename T>
@@ -20,6 +20,7 @@ class Maybe {
         }
         T unwrap_or(const T& v) {
             if (this->has_value_) {
+                this->has_value_ = false;
                 return std::move(this->value_);
             } else {
                 return v;
@@ -29,10 +30,31 @@ class Maybe {
 		template <typename U>
         Maybe<U> map(std::function<U(T)> f) {
             if (this->has_value_) {
-                return Maybe(f(std::move(this->value_)));
+                this->has_value_ = false;
+                return new Maybe(f(std::move(this->value_)));
             } else {
-                return Maybe();
+                return new Maybe();
             }
         }
+
+    template <typename U>
+    U map_or(U v, std::function<U(T)> f) {
+        if (this->has_value_) {
+            this->has_value_ = false;
+            return f(std::move(this->value_));
+        } else {
+            return v;
+        }
+    }
+
+    template <typename U>
+    Maybe<U> and_then(std::function<Maybe<U>(T)> f) {
+        if (this->has_value_) {
+            this->has_value_ = false;
+            return f(std::move(this->value_));
+        } else {
+            return Maybe<U>();
+        }
+    }
 };
 }
