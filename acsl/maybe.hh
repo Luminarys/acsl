@@ -18,7 +18,7 @@ namespace acsl {
     public:
         constexpr Maybe() : none_state_('\0') {}
 
-        Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
+        constexpr Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
 
         bool has_value() const {
             return this->has_value_;
@@ -33,7 +33,7 @@ namespace acsl {
                 this->has_value_ = false;
                 return std::move(this->value_);
             } else {
-                return v;
+                return std::move(v);
             }
         }
 
