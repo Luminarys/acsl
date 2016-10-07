@@ -18,7 +18,7 @@ namespace acsl {
     public:
         constexpr Maybe() : none_state_('\0') {}
 
-        Maybe(const T &v) : value_(v), has_value_(true) {}
+        Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
 
         bool has_value() const {
             return this->has_value_;
@@ -28,7 +28,7 @@ namespace acsl {
             return !this->has_value_;
         }
 
-        T unwrap_or(const T &v) {
+        T unwrap_or(T&& v) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return std::move(this->value_);
@@ -37,11 +37,11 @@ namespace acsl {
             }
         }
 
-        Maybe<const T &> as_ref() const {
+        Maybe<const T&> as_ref() const {
             if (this->has_value_) {
-                return Maybe<const T &>(this->value_);
+                return Maybe<const T&>(this->value_);
             } else {
-                return Maybe<const T &>();
+                return Maybe<const T&>();
             }
         }
 

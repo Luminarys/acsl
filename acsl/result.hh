@@ -20,13 +20,9 @@ namespace acsl {
     public:
         static_assert(!IsSame<T, E>);
 
-        Result(const T &v) : value_(v), has_value_(true) {}
+        Result(T&& v) : value_(std::move(v)), has_value_(true) {}
 
-        Result(T &&v) : value_(std::move(v)), has_value_(true) {}
-
-        Result(const E &v) : error_(v), has_value_(false) {}
-
-        Result(E &&v) : error_(std::move(v)), has_value_(false) {}
+        Result(E&& v) : error_(std::move(v)), has_value_(false) {}
 
         bool is_ok() const {
             return this->has_value_;
@@ -53,11 +49,11 @@ namespace acsl {
             }
         }
 
-        Result<const T &, const E &> as_ref() const {
+        Result<const T&, const E&> as_ref() const {
             if (this->has_value_) {
-                return Result<const T &, const E &>(this->value_);
+                return Result<const T&, const E&>(this->value_);
             } else {
-                return Result<const T &, const E &>(this->error_);
+                return Result<const T&, const E&>(this->error_);
             }
         }
 
