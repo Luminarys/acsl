@@ -18,21 +18,45 @@ namespace acsl {
         };
         bool has_value_;
     public:
-        static_assert(!IsSame<T, E>);
+        static_assert(!IsSame < T, E > );
+
+        constexpr Result(Result&& o) : has_value_(o.has_value_) {
+            if (has_value_) {
+                value_ = std::move(o.value_);
+            } else {
+                error_ = std::move(o.error_);
+            }
+        }
+
+        Result(Result const&) = delete;
 
         constexpr Result(T&& v) : value_(std::move(v)), has_value_(true) {}
 
         constexpr Result(E&& v) : error_(std::move(v)), has_value_(false) {}
 
-        bool is_ok() const {
+        ~Result() {}
+
+        Result& operator=(Result const& other)  = delete;
+
+        Result& operator=(Result&& other) {
+            this->has_value_ = other.has_value_;
+            if (other.has_value_) {
+                this->value_ = std::move(other.value_);
+            } else {
+                this->error_ = std::move(other.error_);
+            }
+            return *this;
+        }
+
+        constexpr bool is_ok() const {
             return this->has_value_;
         }
 
-        bool is_err() const {
+        constexpr bool is_err() const {
             return !this->has_value_;
         }
 
-        Maybe<T> ok() {
+        Maybe <T> ok() {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return Maybe<T>(std::move(this->value_));
@@ -41,7 +65,7 @@ namespace acsl {
             }
         }
 
-        Maybe<E> err() {
+        Maybe <E> err() {
             if (this->has_value_) {
                 return Maybe<E>();
             } else {
