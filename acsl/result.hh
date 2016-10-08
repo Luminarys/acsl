@@ -5,7 +5,6 @@
 #ifndef ACSL_RESULT_HH
 #define ACSL_RESULT_HH
 
-#include <functional>
 #include "type_traits.hh"
 #include "maybe.hh"
 
@@ -58,7 +57,6 @@ namespace acsl {
 
         Maybe <T> ok() {
             if (this->has_value_) {
-                this->has_value_ = false;
                 return Maybe<T>(std::move(this->value_));
             } else {
                 return Maybe<T>();
@@ -89,7 +87,8 @@ namespace acsl {
             }
         }
 
-        T unwrap_or_else(std::function<T(E)> f) {
+        template<typename F>
+        T unwrap_or_else(F&& f) {
             if (this->has_value_) {
                 return this->value_;
             } else {
@@ -97,8 +96,8 @@ namespace acsl {
             }
         }
 
-        template<typename U>
-        Result<U, E> and_then(std::function<Result<U, E>(T)> f) {
+        template<typename U, typename F>
+        Result<U, E> and_then(F&& f) {
             if (this->has_value_) {
                 return f(this->value_);
             } else {
@@ -106,8 +105,8 @@ namespace acsl {
             }
         }
 
-        template<typename U>
-        Result<U, E> map(std::function<U(T)> f) {
+        template<typename U, typename F>
+        Result<U, E> map(F&& f) {
             if (this->has_value_) {
                 return Result<U, E>(f(std::move(this->value_)));
             } else {

@@ -5,7 +5,6 @@
 #ifndef ACSL_MAYBE_HH
 #define ACSL_MAYBE_HH
 
-#include <functional>
 #include "type_traits.hh"
 
 namespace acsl {
@@ -69,18 +68,18 @@ namespace acsl {
             }
         }
 
-        template<typename U>
-        Maybe<U> map(std::function<U(T)> f) {
+        template<typename U, typename F>
+        Maybe<U> map(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return Maybe<U>(f(std::move(this->value_)));
             } else {
-                return Maybe<U>();
+                return nothing;
             }
         }
 
-        template<typename U>
-        U map_or(U v, std::function<U(T)> f) {
+        template<typename U, typename F>
+        U map_or(U&& v, F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));
@@ -89,13 +88,13 @@ namespace acsl {
             }
         }
 
-        template<typename U>
-        Maybe<U> and_then(std::function<Maybe<U>(T)> f) {
+        template<typename U, typename F>
+        Maybe<U> and_then(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));
             } else {
-                return Maybe<U>();
+                return nothing;
             }
         }
     };
