@@ -6,6 +6,7 @@
 #define ACSL_MAYBE_HH
 
 #include "type_traits.hh"
+#include "types.hh"
 
 namespace acsl {
 
@@ -59,12 +60,37 @@ namespace acsl {
             return !this->has_value_;
         }
 
-        T unwrap_or(T&& v) {
+        T&& unwrap() {
+            if (this->has_value_) {
+                this->has_value_ = false;
+                return std::move(this->value_);
+            } else {
+                exit(0);
+            }
+        }
+
+        T&& unwrap_or(T&& v) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return std::move(this->value_);
             } else {
                 return std::move(v);
+            }
+        }
+
+        Maybe<CRef<T>> as_cref() const {
+            if (this->has_value_) {
+                return Maybe<CRef<T>>(std::cref(this->value_));
+            } else {
+                return nothing;
+            }
+        }
+
+        Maybe<Ref<T>> as_ref() {
+            if (this->has_value_) {
+                return Maybe<Ref<T>>(std::ref(this->value_));
+            } else {
+                return nothing;
             }
         }
 

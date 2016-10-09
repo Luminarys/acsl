@@ -1,4 +1,3 @@
-#include <iostream>
 #include "test/catch.hh"
 #include "acsl/maybe.hh"
 
@@ -11,7 +10,7 @@ Maybe<int> f() {
 TEST_CASE("Maybe", "[maybe]") {
     auto mi = f();
     REQUIRE(mi.is_none());
-    REQUIRE(!mi.has_value());
+    REQUIRE_FALSE(mi.has_value());
     REQUIRE(mi.unwrap_or(5) == 5);
 
     mi = Maybe<int>(5);
