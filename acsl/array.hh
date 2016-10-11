@@ -18,7 +18,7 @@ namespace acsl {
         Array(std::initializer_list<T> l) {
             int i = 0;
             for (T e: l) {
-                buffer_[i++] = e;
+                buffer_[i++] = std::move(e);
             }
         }
 
