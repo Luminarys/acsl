@@ -23,6 +23,7 @@ namespace acsl {
         usize size_, capacity_;
         A allocator_;
         T *buffer_;
+
     public:
         Vector(A const& a = A()) : size_(0), capacity_(0), buffer_(nullptr), allocator_(a) {}
 
@@ -39,7 +40,7 @@ namespace acsl {
                 }
             } else {
                 for (int i = 0; i < n; i++) {
-                    allocator_.construct(buffer_[i], val);
+                    allocator_.construct(&buffer_[i], val);
                 }
             }
         }
@@ -53,7 +54,7 @@ namespace acsl {
         Vector(Vector&& v, A const& a = A()) : size_(v.size_), capacity_(v.size_), buffer_(nullptr), allocator_(a) {
             buffer_ = allocator_.allocate(v.size_);
             for (int i = 0; i < v.size_; i++) {
-                allocator_.construct(buffer_[i], std::move(v.buffer_[i]));
+                allocator_.construct(&buffer_[i], std::move(v.buffer_[i]));
             }
         }
 
@@ -74,7 +75,6 @@ namespace acsl {
         }
 
         Vector& operator=(Vector const& v) {
-            // TODO: Validate allocator propagation trait
             clear();
             allocator_.deallocate(buffer_, capacity_);
             allocator_.allocate(buffer_, v.size_);
@@ -85,13 +85,10 @@ namespace acsl {
         }
 
         Vector& operator=(Vector&& v) {
-            // TODO: Validate allocator propagation trait
-            clear();
-            allocator_.deallocate(buffer_, capacity_);
-            buffer_ = std::move(v.buffer_);
-            size_ = v.size_;
-            capacity_ = v.size_;
-            allocator_ = v.allocator_;
+            std::swap(buffer_, v.buffer_);
+            std::swap(size_, v.size_);
+            std::swap(capacity_, v.capacity_);
+            std::swap(allocator_, v.allocator_);
             return *this;
         }
 

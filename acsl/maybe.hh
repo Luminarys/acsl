@@ -50,6 +50,24 @@ namespace acsl {
 
         constexpr Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
 
+        friend bool operator==(Maybe<T> const& a, Maybe<T> const& b) {
+            if (a.has_value() && b.has_value()) {
+                return a.value_ == b.value_;
+            }
+            return a.has_value() == false && b.has_value() == false;
+        }
+
+        friend bool operator==(Maybe<T> const& a, Nothing const& b) {
+            return a.is_none();
+        }
+
+        friend bool operator==(Maybe<T> const& a, T const& b) {
+            if (a.has_value()) {
+                return a.value_ == b;
+            }
+            return false;
+        }
+
         ~Maybe() {}
 
         constexpr bool has_value() const {
