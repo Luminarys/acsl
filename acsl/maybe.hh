@@ -54,7 +54,7 @@ namespace acsl {
             if (a.has_value() && b.has_value()) {
                 return a.value_ == b.value_;
             }
-            return a.has_value() == false && b.has_value() == false;
+            return !a.has_value() && !b.has_value();
         }
 
         friend bool operator==(Maybe<T> const& a, Nothing const& b) {

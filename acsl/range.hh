@@ -10,7 +10,10 @@
 #include "maybe.hh"
 
 namespace acsl {
-    template<typename T>
+    template<typename B, typename T>
+    struct RangeIterator;
+
+    template<typename B, typename T>
     class InputRange {
     public:
         virtual void popFront() {};
@@ -18,31 +21,102 @@ namespace acsl {
         virtual Maybe<Ref<T>> front() {};
 
         virtual bool empty() {};
+
+        virtual RangeIterator<B, T> begin() {
+            return RangeIterator<B, T>(static_cast<B *>(this));
+        }
+
+        virtual RangeIterator<B, T> end() {
+            return RangeIterator<B, T>();
+        }
     };
 
-    template<typename T>
-    class ForwardRange : InputRange<T> {
+    template<typename B, typename T>
+    class ForwardRange : public InputRange<B, T> {
     public:
-        ForwardRange<T> save() {};
+        ForwardRange<B, T> save() {};
     };
 
-    template<typename T>
-    class BidirectionalRange : ForwardRange<T> {
+    template<typename B, typename T>
+    class BidirectionalRange : public ForwardRange<B, T> {
     public:
-        BidirectionalRange<T> save() {};
+        BidirectionalRange<B, T> save() {};
 
         virtual Maybe<Ref<T>> back() {};
 
         virtual void popBack() {};
     };
 
-    template<typename T, typename I>
-    constexpr bool IsInputRange = IsBaseOf<InputRange<I>, T>;
+
+    template<typename T>
+    struct PointerRange : public BidirectionalRange<PointerRange<T>, T> {
+        T *start_;
+        T *end_;
+
+    public:
+        PointerRange(T *start, T *end) : start_(start), end_(end) {}
+
+        void popFront() {
+            start_++;
+        }
+
+        void popBack() {
+            end_--;
+        }
+
+        Maybe<Ref<T>> front() const {
+            if (empty()) {
+                return nothing;
+            }
+            return Maybe<Ref<T>>(std::ref(*start_));
+        }
+
+        Maybe<Ref<T>> back() const {
+            if (empty()) {
+                return nothing;
+            }
+            return Maybe<Ref<T>>(std::ref(*end_));
+        }
+
+        bool empty() const {
+            return start_ == end_;
+        }
+
+        PointerRange<T> save() const {
+            return VecIter(start_, end_);
+        }
+    };
+
+    template<typename B, typename T>
+    struct RangeIterator {
+        B *range_;
+        bool start_;
+
+        RangeIterator() : start_(false) {}
+
+        RangeIterator(B *range) : range_(range), start_(true) {}
+
+        RangeIterator& operator++() {
+            range_->popFront();
+        }
+
+        bool operator!=(RangeIterator) {
+            return !range_->empty();
+        }
+
+        Ref<T> operator*() {
+            return range_->front().unwrap();
+        }
+    };
+
 
     template<typename T, typename I>
-    constexpr bool IsForwardRange = IsBaseOf<ForwardRange<I>, T>;
+    constexpr bool IsInputRange = IsBaseOf<InputRange<T, I>, T>;
 
     template<typename T, typename I>
-    constexpr bool IsBidirectionalRange = IsBaseOf<BidirectionalRange<I>, T>;
+    constexpr bool IsForwardRange = IsBaseOf<ForwardRange<T, I>, T>;
+
+    template<typename T, typename I>
+    constexpr bool IsBidirectionalRange = IsBaseOf<BidirectionalRange<T, I>, T>;
 }
 #endif //ACSL_RANGE_HH

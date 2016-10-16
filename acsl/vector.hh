@@ -15,48 +15,6 @@
 #include "range.hh"
 
 namespace acsl {
-    template<typename T>
-    struct VecIter : BidirectionalRange<T> {
-        T *buffer_;
-        usize size_;
-        usize pos_;
-
-    public:
-        VecIter(T *buffer, usize size) : buffer_(buffer), pos_(0), size_(size) {}
-
-        VecIter(T *buffer, usize size, usize pos) : buffer_(buffer), pos_(pos), size_(size) {}
-
-        void popFront() {
-            pos_++;
-        }
-
-        void popBack() {
-            size_--;
-        }
-
-        Maybe<Ref<T>> front() const {
-            if (empty()) {
-                return nothing;
-            }
-            return Maybe<Ref<T>>(std::ref(buffer_[pos_]));
-        }
-
-        Maybe<Ref<T>> back() const {
-            if (empty()) {
-                return nothing;
-            }
-            return Maybe<Ref<T>>(std::ref(buffer_[size_ - 1]));
-        }
-
-        bool empty() const {
-            return pos_ >= size_;
-        }
-
-        VecIter<T> save() const {
-            return VecIter(buffer_, size_, pos_);
-        }
-    };
-
     template<typename T, typename A = std::allocator<T>>
     class Vector {
         static_assert(IsPod<T> || IsNoThrowCopyConstructible<T>);
@@ -209,8 +167,12 @@ namespace acsl {
             size_ = 0;
         }
 
-        VecIter<T> iter() {
-            return VecIter<T>(buffer_, size_);
+        PointerRange<T> iter() {
+            return PointerRange<T>(buffer_, buffer_ + size_);
+        }
+
+        PointerRange<T const> citer() const {
+            return PointerRange<T const>(buffer_, buffer_ + size_);
         }
 
     private:
