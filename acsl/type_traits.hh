@@ -23,6 +23,12 @@ namespace acsl {
 
     template<typename T>
     constexpr bool IsNoThrowMoveAssignable = std::is_nothrow_move_assignable<T>::value;
+
+    template<typename T, typename U>
+    constexpr bool IsConvertible = std::is_convertible<T, U>::value;
+
+    template<typename T, typename U>
+    constexpr bool IsBaseOf = std::is_base_of<T, U>::value;
 }
 
 #endif //ACSL_TYPE_TRAITS_HH
