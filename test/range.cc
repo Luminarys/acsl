@@ -3,6 +3,7 @@
 //
 #include "catch.hh"
 #include "acsl/range.hh"
+#include "acsl/algorithm.hh"
 #include "acsl/vector.hh"
 
 using namespace acsl;
@@ -23,6 +24,10 @@ TEST_CASE("Range", "[range]") {
     iter.front().unwrap().get() = 0;
     REQUIRE(iter.front().unwrap() == 0);
 
-    auto citer = v.citer();
-    REQUIRE(citer.front().unwrap() == 1);
+    iter = v.iter();
+    for (int& i: map(map(v.iter(), [](int i) { return i + 1; }), [](int i) { return i * i; })) {
+        int v = iter.front().unwrap() + 1;
+        REQUIRE(i == v * v);
+        iter.popFront();
+    }
 }

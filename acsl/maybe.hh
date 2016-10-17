@@ -32,7 +32,7 @@ namespace acsl {
 
         Maybe(Maybe const&) = delete;
 
-        constexpr Maybe(Maybe&& v) : has_value_(v.has_value_) {
+        Maybe(Maybe&& v) : has_value_(v.has_value_) {
             if (has_value_) {
                 value_ = std::move(v.value_);
             }
@@ -48,7 +48,7 @@ namespace acsl {
             return *this;
         }
 
-        constexpr Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
+        Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
 
         friend bool operator==(Maybe<T> const& a, Maybe<T> const& b) {
             if (a.has_value() && b.has_value()) {
@@ -112,18 +112,22 @@ namespace acsl {
             }
         }
 
-        template<typename U, typename F>
-        Maybe<U> map(F&& f) {
+        template<typename F>
+        using RV = decltype(std::declval<F>()(std::declval<T>()));
+
+        template<typename F>
+        Maybe<RV<F>> map(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
-                return Maybe<U>(f(std::move(this->value_)));
+                return Maybe<RV < F>>
+                (f(std::move(this->value_)));
             } else {
                 return nothing;
             }
         }
 
-        template<typename U, typename F>
-        U map_or(U&& v, F&& f) {
+        template<typename F>
+        RV<F> map_or(RV<F>&& v, F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));
@@ -132,8 +136,8 @@ namespace acsl {
             }
         }
 
-        template<typename U, typename F>
-        Maybe<U> and_then(F&& f) {
+        template<typename F>
+        Maybe<RV<F>> and_then(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));

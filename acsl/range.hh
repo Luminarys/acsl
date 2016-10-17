@@ -1,5 +1,6 @@
 //
-// Created by luminarys on 10/15/16.
+//  Various data structures which encompass range types.
+// Based on D-lang's concept of ranges.
 //
 
 #ifndef ACSL_RANGE_HH
@@ -19,6 +20,8 @@ namespace acsl {
         virtual void popFront() {};
 
         virtual Maybe<Ref<T>> front() {};
+
+        virtual Maybe<T> moveFront() {};
 
         virtual bool empty() {};
 
@@ -44,9 +47,10 @@ namespace acsl {
 
         virtual Maybe<Ref<T>> back() {};
 
+        virtual Maybe<T> moveBack() {};
+
         virtual void popBack() {};
     };
-
 
     template<typename T>
     struct PointerRange : public BidirectionalRange<PointerRange<T>, T> {
@@ -60,8 +64,24 @@ namespace acsl {
             start_++;
         }
 
+        Maybe<T> moveFront() {
+            if (empty()) {
+                return nothing;
+            }
+            T&& v = std::move(*start_++);
+            return Maybe<T>(std::move(v));
+        }
+
         void popBack() {
             end_--;
+        }
+
+        Maybe<T> moveBack() {
+            if (empty()) {
+                return nothing;
+            }
+            T&& v = std::move(*end_--);
+            return Maybe<T>(std::move(v));
         }
 
         Maybe<Ref<T>> front() const {

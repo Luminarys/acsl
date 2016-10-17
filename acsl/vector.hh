@@ -1,6 +1,5 @@
 //
 // Dynamic resizing array implementation.
-// See https://github.com/Luminarys/acsl for additional details
 //
 
 #ifndef ACSL_VECTOR_HH
