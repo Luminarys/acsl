@@ -1,5 +1,5 @@
 //
-//  Various data structures which allow for iteration and transformation on iterators.
+// Various data structures which allow for iteration and transformation on iterators.
 // Based on Rust's Iterator trait.
 //
 
@@ -65,7 +65,7 @@ class RangeIter {
   T start_, end_;
  public:
   using Item = T;
-  RangeIter(T start, T end) : start_(start), end_(end) {}
+  RangeIter(T&& start, T&& end) : start_(start), end_(end) {}
 
   Maybe<Item> next() {
     if (start_ != end_) {
@@ -81,12 +81,12 @@ class RangeIter {
 
 template<typename T>
 Iterator<RangeIter<T>> range(T&& start, T&& end) {
-  return Iterator<RangeIter<T>>(RangeIter<T>(start, end));
+  return Iterator<RangeIter<T>>(RangeIter<T>(std::move(start), std::move(end)));
 }
 
 template<typename T>
 Iterator<RangeIter<T>> range(T&& end) {
-  return Iterator<RangeIter<T>>(RangeIter<T>(T(), end));
+  return Iterator<RangeIter<T>>(RangeIter<T>(std::move(T()), std::move(end)));
 }
 
 template<typename B>
