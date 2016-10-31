@@ -10,138 +10,141 @@
 
 namespace acsl {
 
-    struct Nothing {
-        explicit constexpr Nothing() {}
-    };
+struct Nothing {
+  explicit constexpr Nothing() {}
+};
 
-    constexpr Nothing nothing = Nothing();
+constexpr Nothing nothing = Nothing();
 
-    template<typename T>
-    class Maybe {
-        union {
-            T value_;
-            char none_state_;
-        };
-        bool has_value_ = false;
-    public:
-        static_assert(!IsSame<T, Nothing>);
+template<typename T>
+class Maybe {
+  union {
+    T value_;
+    char none_state_;
+  };
+  bool has_value_ = false;
 
-        constexpr Maybe() : none_state_('\0') {}
+ public:
+  static_assert(!IsSame<T, Nothing>, "Maybe type must not be Nothing");
 
-        constexpr Maybe(Nothing) : none_state_('\0') {}
+  constexpr Maybe() : none_state_('\0') {
+  }
 
-        Maybe(Maybe const&) = delete;
+  constexpr Maybe(Nothing) : none_state_('\0') {
+  }
 
-        Maybe(Maybe&& v) : has_value_(v.has_value_) {
-            if (has_value_) {
-                value_ = std::move(v.value_);
-            }
-        }
+  Maybe(Maybe const &) = delete;
 
-        Maybe& operator=(Maybe const& other)  = delete;
+  Maybe(Maybe &&v) : has_value_(v.has_value_) {
+    if (has_value_) {
+      value_ = std::move(v.value_);
+    }
+  }
 
-        Maybe& operator=(Maybe&& other) {
-            this->has_value_ = other.has_value_;
-            if (other.has_value_) {
-                this->value_ = std::move(other.value_);
-            }
-            return *this;
-        }
+  Maybe &operator=(Maybe const &other) = delete;
 
-        Maybe(T&& v) : value_(std::move(v)), has_value_(true) {}
+  Maybe &operator=(Maybe &&other) {
+    this->has_value_ = other.has_value_;
+    if (other.has_value_) {
+      this->value_ = std::move(other.value_);
+    }
+    return *this;
+  }
 
-        friend bool operator==(Maybe<T> const& a, Maybe<T> const& b) {
-            if (a.has_value() && b.has_value()) {
-                return a.value_ == b.value_;
-            }
-            return !a.has_value() && !b.has_value();
-        }
+  Maybe(T &&v) : value_(std::move(v)), has_value_(true) {
+  }
 
-        friend bool operator==(Maybe<T> const& a, Nothing const& b) {
-            return a.is_none();
-        }
+  friend bool operator==(Maybe<T> const &a, Maybe<T> const &b) {
+    if (a.has_value() && b.has_value()) {
+      return a.value_ == b.value_;
+    }
+    return !a.has_value() && !b.has_value();
+  }
 
-        friend bool operator==(Maybe<T> const& a, T const& b) {
-            if (a.has_value()) {
-                return a.value_ == b;
-            }
-            return false;
-        }
+  friend bool operator==(Maybe<T> const &a, Nothing const &b) {
+    return a.is_none();
+  }
 
-        ~Maybe() {}
+  friend bool operator==(Maybe<T> const &a, T const &b) {
+    if (a.has_value()) {
+      return a.value_ == b;
+    }
+    return false;
+  }
 
-        constexpr bool has_value() const {
-            return this->has_value_;
-        }
+  ~Maybe() {}
 
-        constexpr bool is_none() const {
-            return !this->has_value_;
-        }
+  constexpr bool has_value() const {
+    return this->has_value_;
+  }
 
-        T&& unwrap() {
-            if (this->has_value_) {
-                this->has_value_ = false;
-                return std::move(this->value_);
-            } else {
-                exit(0);
-            }
-        }
+  constexpr bool is_none() const {
+    return !this->has_value_;
+  }
 
-        T&& unwrap_or(T&& v) {
-            if (this->has_value_) {
-                this->has_value_ = false;
-                return std::move(this->value_);
-            } else {
-                return std::move(v);
-            }
-        }
+  T &&unwrap() {
+    if (this->has_value_) {
+      this->has_value_ = false;
+      return std::move(this->value_);
+    } else {
+      exit(0);
+    }
+  }
 
-        Maybe<CRef<T>> as_cref() const {
-            if (this->has_value_) {
-                return Maybe<CRef<T>>(std::cref(this->value_));
-            } else {
-                return nothing;
-            }
-        }
+  T &&unwrap_or(T &&v) {
+    if (this->has_value_) {
+      this->has_value_ = false;
+      return std::move(this->value_);
+    } else {
+      return std::move(v);
+    }
+  }
 
-        Maybe<Ref<T>> as_ref() {
-            if (this->has_value_) {
-                return Maybe<Ref<T>>(std::ref(this->value_));
-            } else {
-                return nothing;
-            }
-        }
+  Maybe<CRef<T>> as_cref() const {
+    if (this->has_value_) {
+      return Maybe<CRef<T>>(std::cref(this->value_));
+    } else {
+      return nothing;
+    }
+  }
 
-        template<typename F>
-        Maybe<MapResult<T, F>> map(F&& f) {
-            if (this->has_value_) {
-                this->has_value_ = false;
-                return Maybe<MapResult<T, F>>
-                (f(std::move(this->value_)));
-            } else {
-                return nothing;
-            }
-        }
+  Maybe<Ref<T>> as_ref() {
+    if (this->has_value_) {
+      return Maybe<Ref<T>>(std::ref(this->value_));
+    } else {
+      return nothing;
+    }
+  }
 
-        template<typename F>
-        MapResult<T, F> map_or(MapResult<T, F>&& v, F&& f) {
-            if (this->has_value_) {
-                this->has_value_ = false;
-                return f(std::move(this->value_));
-            } else {
-                return v;
-            }
-        }
+  template<typename F>
+  Maybe<MapResult<T, F>> map(F &&f) {
+    if (this->has_value_) {
+      this->has_value_ = false;
+      return Maybe<MapResult<T, F>>(f(std::move(this->value_)));
+    } else {
+      return nothing;
+    }
+  }
 
-        template<typename F>
-        Maybe<MapResult<T, F>> and_then(F&& f) {
-            if (this->has_value_) {
-                this->has_value_ = false;
-                return f(std::move(this->value_));
-            } else {
-                return nothing;
-            }
-        }
-    };
+  template<typename F>
+  MapResult<T, F> map_or(MapResult<T, F> &&v, F &&f) {
+    if (this->has_value_) {
+      this->has_value_ = false;
+      return f(std::move(this->value_));
+    } else {
+      return v;
+    }
+  }
+
+  template<typename F>
+  Maybe<MapResult<T, F>> and_then(F &&f) {
+    if (this->has_value_) {
+      this->has_value_ = false;
+      return f(std::move(this->value_));
+    } else {
+      return nothing;
+    }
+  }
+};
 }
 #endif
