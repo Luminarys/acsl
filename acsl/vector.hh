@@ -35,11 +35,11 @@ class Vector {
   T *buffer_;
 
  public:
-  Vector(A const &a = A()) :
+  Vector(A const& a = A()) :
       size_(0), capacity_(0), buffer_(nullptr), allocator_(a) {
   }
 
-  Vector(usize n, T const &val = T(), A const &a = A()) :
+  Vector(usize n, T const& val = T(), A const& a = A()) :
       Vector(a) {
     if (n == 0) {
       return;
@@ -58,14 +58,14 @@ class Vector {
     }
   }
 
-  Vector(Vector const &v, A const &a = A()) :
+  Vector(Vector const& v, A const& a = A()) :
       size_(v.size_), capacity_(v.size_), buffer_(nullptr),
       allocator_(a) {
     buffer_ = allocator_.allocate(v.size_);
     copy_contents(v);
   }
 
-  Vector(Vector &&v, A const &a = A()) :
+  Vector(Vector&& v, A const& a = A()) :
       size_(v.size_), capacity_(v.size_), buffer_(nullptr), allocator_(a) {
     buffer_ = allocator_.allocate(v.size_);
     for (int i = 0; i < v.size_; i++) {
@@ -73,7 +73,7 @@ class Vector {
     }
   }
 
-  Vector(std::initializer_list<T> l, A const &a = A()) :
+  Vector(std::initializer_list<T> l, A const& a = A()) :
       size_(l.size()), capacity_(l.size()), buffer_(nullptr), allocator_(a) {
     buffer_ = allocator_.allocate(l.size());
     int i = 0;
@@ -89,7 +89,7 @@ class Vector {
     allocator_.deallocate(buffer_, capacity_);
   }
 
-  Vector &operator=(Vector const &v) {
+  Vector& operator=(Vector const& v) {
     clear();
     allocator_.deallocate(buffer_, capacity_);
     allocator_.allocate(buffer_, v.size_);
@@ -99,7 +99,7 @@ class Vector {
     return *this;
   }
 
-  Vector &operator=(Vector &&v) {
+  Vector& operator=(Vector&& v) {
     std::swap(buffer_, v.buffer_);
     std::swap(size_, v.size_);
     std::swap(capacity_, v.capacity_);
@@ -115,24 +115,24 @@ class Vector {
     return size_;
   }
 
-  void insert(usize idx, T &&v) {
+  void insert(usize idx, T&& v) {
     shift_right(idx, 1);
     buffer_[idx] = std::move(v);
   }
 
-  void insert(usize idx, T const &v) {
+  void insert(usize idx, T const& v) {
     shift_right(idx, 1);
     buffer_[idx] = v;
   }
 
-  void push(T const &v) {
+  void push(T const& v) {
     if (size_ == capacity_) {
       resize(capacity_ * 1.5);
     }
     allocator_.construct(&buffer_[size_++], v);
   }
 
-  void push(T &&v) {
+  void push(T&& v) {
     if (size_ == capacity_) {
       resize(capacity_ * 1.5);
     }
@@ -189,16 +189,16 @@ class Vector {
     size_ = 0;
   }
 
-  Iterator<Iter<T>> iter() {
-    return Iterator<Iter<T>>(Iter<T>(buffer_, buffer_ + size_));
+  DoubleEndedIterator<Iter<T>> iter() {
+    return DoubleEndedIterator<Iter<T>>(Iter<T>(buffer_, buffer_ + size_));
   }
 
-  Iterator<CIter<T>> citer() const {
-    return Iterator<CIter<T>>(CIter<T>(buffer_, buffer_ + size_));
+  DoubleEndedIterator<CIter<T>> citer() const {
+    return DoubleEndedIterator<CIter<T>>(CIter<T>(buffer_, buffer_ + size_));
   }
 
-  Iterator<IntoIter<T, A>> into_iter() {
-    return Iterator<IntoIter<T, A>>(IntoIter<T, A>(std::move(this)));
+  DoubleEndedIterator<IntoIter<T, A>> into_iter() {
+    return DoubleEndedIterator<IntoIter<T, A>>(IntoIter<T, A>(std::move(*this)));
   }
 
  private:
@@ -216,7 +216,7 @@ class Vector {
     return Maybe<CRef<T>>(std::cref(buffer_[i]));
   }
 
-  void resize(usize n, T const &v = T()) {
+  void resize(usize n, T const& v = T()) {
     if (n == 0) {
       clear();
       return;
@@ -269,7 +269,7 @@ class Vector {
     }
   }
 
-  void copy_contents(Vector const &v) {
+  void copy_contents(Vector const& v) {
     if (IsPod<T>) {
       memcpy(buffer_, v.buffer_, sizeof(T) * size_);
     } else {
@@ -286,14 +286,21 @@ class Iter {
   T *end_;
 
  public:
-  Iter(T *start, T *end)
-      :
-      start_(start), end_(end) {
+  using Item = Ref<T>;
+
+  Iter(T *start, T *end) : start_(start), end_(end) {
   }
 
   Maybe<Ref<T>> next() {
     if (start_ != end_) {
       return Maybe<Ref<T>>(std::ref(*start_++));
+    }
+    return nothing;
+  }
+
+  Maybe<Ref<T>> next_back() {
+    if (start_ != end_) {
+      return Maybe<Ref<T>>(std::ref(*--end_));
     }
     return nothing;
   }
@@ -305,14 +312,21 @@ class CIter {
   T *end_;
 
  public:
-  CIter(T *start, T *end)
-      :
-      start_(start), end_(end) {
+  using Item = CRef<T>;
+
+  CIter(T *start, T *end) : start_(start), end_(end) {
   }
 
   Maybe<CRef<T>> next() {
     if (start_ != end_) {
       return Maybe<CRef<T>>(std::cref(*start_++));
+    }
+    return nothing;
+  }
+
+  Maybe<CRef<T>> next_back() {
+    if (start_ != end_) {
+      return Maybe<CRef<T>>(std::cref(*--end_));
     }
     return nothing;
   }
@@ -323,13 +337,17 @@ class IntoIter {
   Vector<T, A> vec_;
 
  public:
-  IntoIter(Vector<T, A> vec)
-      :
-      vec_(vec) {
+  using Item = T;
+
+  IntoIter(Vector<T, A> vec) : vec_(vec) {
   }
 
   Maybe<T> next() {
     return vec_.pop_front();
+  }
+
+  Maybe<T> next_back() {
+    return vec_.pop();
   }
 };
 }

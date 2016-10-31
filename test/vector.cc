@@ -40,5 +40,9 @@ TEST_CASE("Vector", "[vector]") {
   REQUIRE(i3.next().unwrap() - 2 / 3 < 0.01);
   REQUIRE(i3.next().unwrap() - 4 / 3 < 0.01);
   REQUIRE(i3.next().unwrap() - 2 < 0.01);
+
+  auto i4 = v4.iter().rev();
+  REQUIRE(i4.next().unwrap() == 5);
+  REQUIRE(i4.next().unwrap() == 4);
 }
 

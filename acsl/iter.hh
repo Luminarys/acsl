@@ -1,6 +1,6 @@
 //
-//  Various data structures which encompass range types.
-// Based on D-lang's concept of ranges.
+//  Various data structures which allow for iteration and transformation on iterators.
+// Based on Rust's Iterator trait.
 //
 
 #ifndef ACSL_RANGE_HH
@@ -16,17 +16,35 @@ template<typename B, typename F>
 class Map;
 
 template<typename B>
+class Rev;
+
+template<typename B>
 class Iterator {
+ protected:
   B base_;
  public:
-  Iterator(B &&base) : base_(base) {}
+  Iterator(B&& base) : base_(base) {}
 
-  using T = RemoveRef<decltype(std::declval<B>().next().unwrap())>;
-  Maybe<T> next() { return base_.next(); }
+  using Item = typename B::Item;
+  Maybe<Item> next() { return base_.next(); }
 
   template<typename F>
-  Iterator<Map<B, F>> map(F &&func) {
+  Iterator<Map<B, F>> map(F&& func) {
     return Iterator<Map<B, F>>(Map<B, F>(std::move(*this), std::move(func)));
+  }
+};
+
+template<typename B>
+class DoubleEndedIterator : public Iterator<B> {
+ public:
+  using Item = typename Iterator<B>::Item;
+
+  DoubleEndedIterator(B&& base) : Iterator<B>(std::move(base)) {}
+
+  Maybe<Item> next_back() { return this->base_.next_back(); }
+
+  Iterator<Rev<B>> rev() {
+    return Iterator<Rev<B>>(Rev<B>(std::move(*this)));
   }
 };
 
@@ -36,12 +54,29 @@ class Map {
   F func_;
 
  public:
-  Map(Iterator<B> &&it, F &&func) : iter_(it), func_(func) {}
+  Map(Iterator<B>&& it, F&& func) : iter_(it), func_(func) {}
 
-  using R = decltype(std::declval<F>()(std::declval<Iterator<B>>().next().unwrap()));
-  Maybe<MapResult<R, F>> next() {
+  using BItem = typename Iterator<B>::Item;
+
+  using Item = decltype(std::declval<F>()(std::declval<BItem>()));
+  Maybe<Item> next() {
     return iter_.next().map(func_);
   };
+};
+
+template<typename B>
+class Rev {
+  DoubleEndedIterator<B> iter_;
+
+ public:
+  using Item = typename B::Item;
+
+  Rev(DoubleEndedIterator<B>&& it) : iter_(it) {}
+
+  using T = RemoveRef<decltype(std::declval<B>().next_back().unwrap())>;
+  Maybe<T> next() {
+    return iter_.next_back();
+  }
 };
 }
 #endif //ACSL_RANGE_HH
