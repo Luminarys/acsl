@@ -10,4 +10,4 @@ include_directories(".")
 
 file(GLOB_RECURSE sources test/*.cc)
 
-add_executable(test_main ${sources})
+add_executable(test_main ${sources} test/iterator.cc)

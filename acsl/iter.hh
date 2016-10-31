@@ -12,6 +12,9 @@
 
 namespace acsl {
 
+template<typename B>
+class RangeLoopIter;
+
 template<typename B, typename F>
 class Map;
 
@@ -23,10 +26,19 @@ class Iterator {
  protected:
   B base_;
  public:
+  using Item = typename B::Item;
+
   Iterator(B&& base) : base_(base) {}
 
-  using Item = typename B::Item;
   Maybe<Item> next() { return base_.next(); }
+
+  RangeLoopIter<B> begin() {
+    return RangeLoopIter<B>(std::move(*this));
+  }
+
+  RangeLoopIter<B> end() {
+    return RangeLoopIter<B>();
+  }
 
   template<typename F>
   Iterator<Map<B, F>> map(F&& func) {
@@ -45,6 +57,59 @@ class DoubleEndedIterator : public Iterator<B> {
 
   Iterator<Rev<B>> rev() {
     return Iterator<Rev<B>>(Rev<B>(std::move(*this)));
+  }
+};
+
+template<typename T>
+class RangeIter {
+  T start_, end_;
+ public:
+  using Item = T;
+  RangeIter(T start, T end) : start_(start), end_(end) {}
+
+  Maybe<Item> next() {
+    if (start_ != end_) {
+      if (start_ < end_) {
+        return Maybe<Item>(std::move(start_++));
+      } else {
+        return Maybe<Item>(std::move(start_--));
+      }
+    }
+    return nothing;
+  }
+};
+
+template<typename T>
+Iterator<RangeIter<T>> range(T&& start, T&& end) {
+  return Iterator<RangeIter<T>>(RangeIter<T>(start, end));
+}
+
+template<typename T>
+Iterator<RangeIter<T>> range(T&& end) {
+  return Iterator<RangeIter<T>>(RangeIter<T>(T(), end));
+}
+
+template<typename B>
+class RangeLoopIter {
+  using Item = typename Iterator<B>::Item;
+  Maybe<Iterator<B>> iter_;
+  Maybe<Item> next_;
+
+ public:
+  RangeLoopIter() {}
+  RangeLoopIter(Iterator<B>&& iter)
+      : iter_(Maybe<Iterator<B>>(std::move(iter))), next_(iter_.as_ref().unwrap().get().next()) {}
+
+  Item operator*() {
+    return next_.unwrap();
+  }
+
+  bool operator!=(RangeLoopIter&) {
+    return next_.has_value();
+  }
+
+  void operator++() {
+    next_ = iter_.as_ref().unwrap().get().next();
   }
 };
 
