@@ -11,9 +11,18 @@
 #include "types.hh"
 #include "type_traits.hh"
 #include "maybe.hh"
-#include "range.hh"
+#include "iter.hh"
 
 namespace acsl {
+    template<typename T>
+    class Iter;
+
+    template<typename T>
+    class CIter;
+
+    template<typename T, typename A>
+    class IntoIter;
+
     template<typename T, typename A = std::allocator<T>>
     class Vector {
         static_assert(IsPod<T> || IsNoThrowCopyConstructible<T>);
@@ -102,25 +111,25 @@ namespace acsl {
         }
 
         void insert(usize idx, T&& v) {
-            shift_back(idx, 1);
+            shift_right(idx, 1);
             buffer_[idx] = std::move(v);
         }
 
         void insert(usize idx, T const& v) {
-            shift_back(idx, 1);
+            shift_right(idx, 1);
             buffer_[idx] = v;
         }
 
         void push(T const& v) {
             if (size_ == capacity_) {
-                resize(capacity_ * 2);
+                resize(capacity_ * 1.5);
             }
             allocator_.construct(&buffer_[size_++], v);
         }
 
         void push(T&& v) {
             if (size_ == capacity_) {
-                resize(capacity_ * 2);
+                resize(capacity_ * 1.5);
             }
             allocator_.construct(&buffer_[size_++], std::move(v));
         }
@@ -131,6 +140,15 @@ namespace acsl {
             }
             T o = T(std::move(buffer_[size_ - 1]));
             allocator_.destroy(&buffer_[size_ - 1]);
+            size_--;
+            return Maybe<T>(std::move(o));
+        }
+
+        Maybe<T> pop_front() {
+            if (size_ == 0) {
+                return nothing;
+            }
+            T o = T(std::move(buffer_[0]));
             size_--;
             return Maybe<T>(std::move(o));
         }
@@ -166,12 +184,16 @@ namespace acsl {
             size_ = 0;
         }
 
-        PointerRange<T> iter() {
-            return PointerRange<T>(buffer_, buffer_ + size_);
+        Iterator<Iter<T>> iter() {
+            return Iterator<Iter<T>>(Iter<T>(buffer_, buffer_ + size_));
         }
 
-        PointerRange<T const> citer() const {
-            return PointerRange<T const>(buffer_, buffer_ + size_);
+        Iterator<CIter<T>> citer() const {
+            return Iterator<CIter<T>>(CIter<T>(buffer_, buffer_ + size_));
+        }
+
+        Iterator<IntoIter<T, A>> into_iter() {
+            return Iterator<IntoIter<T, A>>(IntoIter<T, A>(std::move(this)));
         }
 
     private:
@@ -221,13 +243,24 @@ namespace acsl {
             }
         }
 
-        void shift_back(usize idx, usize n) {
+        void shift_right(usize idx, usize n) {
             if (size_ + n > capacity_) {
                 resize(size_ + n);
             }
             size_ += n;
             for (usize i = size_ - 1; i > idx + n - 1; --i) {
                 buffer_[i] = std::move(buffer_[i - n]);
+            }
+        }
+
+        // Shifts elements left n positions
+        void shift_left(usize n) {
+            size_ -= n;
+            for (usize i = 0; i < n; i++) {
+                buffer_[i] = std::move(buffer_[i + n]);
+            }
+            for (usize i = size_ - n; i < size_; i++) {
+                allocator_.destroy(&buffer_[i]);
             }
         }
 
@@ -239,6 +272,48 @@ namespace acsl {
                     allocator_.construct(&buffer_[i], v.buffer_[i]);
                 }
             }
+        }
+    };
+
+    template<typename T>
+    class Iter {
+        T *start_;
+        T *end_;
+    public:
+        Iter(T *start, T *end) : start_(start), end_(end) {}
+
+        Maybe<Ref<T>> next() {
+            if (start_ != end_) {
+                return Maybe<Ref<T>>(std::ref(*start_++));
+            }
+            return nothing;
+        }
+    };
+
+    template<typename T>
+    class CIter {
+        T *start_;
+        T *end_;
+    public:
+        CIter(T *start, T *end) : start_(start), end_(end) {}
+
+        Maybe<CRef<T>> next() {
+            if (start_ != end_) {
+                return Maybe<CRef<T>>(std::cref(*start_++));
+            }
+            return nothing;
+        }
+    };
+
+    template<typename T, typename A>
+    class IntoIter {
+        Vector<T, A> vec_;
+
+    public:
+        IntoIter(Vector<T, A> vec) : vec_(vec) {}
+
+        Maybe<T> next() {
+            return vec_.pop_front();
         }
     };
 }

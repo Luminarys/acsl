@@ -26,5 +26,14 @@ TEST_CASE("Vector", "[vector]") {
     REQUIRE(v3.first().unwrap() == 2);
     v3 = std::move(v);
     REQUIRE(v3.first().unwrap() == 10);
+
+    Vector<int> v4 = {1, 2, 3, 4, 5};
+    auto i = v4.iter();
+    REQUIRE(i.next().unwrap() == 1);
+    REQUIRE(i.next().unwrap() == 2);
+    auto i2 = v4.iter().map([](auto i) { return i * 2; });
+    REQUIRE(i2.next().unwrap() == 2);
+    REQUIRE(i2.next().unwrap() == 4);
+    REQUIRE(i2.next().unwrap() == 6);
 }
 

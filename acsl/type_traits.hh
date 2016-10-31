@@ -29,6 +29,12 @@ namespace acsl {
 
     template<typename T, typename U>
     constexpr bool IsBaseOf = std::is_base_of<T, U>::value;
+
+    template<typename T, typename F>
+    using MapResult = decltype(std::declval<F>()(std::declval<T>()));
+
+    template<typename T>
+    using RemoveRef = typename std::remove_reference<T>::type;
 }
 
 #endif //ACSL_TYPE_TRAITS_HH

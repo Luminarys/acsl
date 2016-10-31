@@ -113,13 +113,10 @@ namespace acsl {
         }
 
         template<typename F>
-        using RV = decltype(std::declval<F>()(std::declval<T>()));
-
-        template<typename F>
-        Maybe<RV<F>> map(F&& f) {
+        Maybe<MapResult<T, F>> map(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
-                return Maybe<RV < F>>
+                return Maybe<MapResult<T, F>>
                 (f(std::move(this->value_)));
             } else {
                 return nothing;
@@ -127,7 +124,7 @@ namespace acsl {
         }
 
         template<typename F>
-        RV<F> map_or(RV<F>&& v, F&& f) {
+        MapResult<T, F> map_or(MapResult<T, F>&& v, F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));
@@ -137,7 +134,7 @@ namespace acsl {
         }
 
         template<typename F>
-        Maybe<RV<F>> and_then(F&& f) {
+        Maybe<MapResult<T, F>> and_then(F&& f) {
             if (this->has_value_) {
                 this->has_value_ = false;
                 return f(std::move(this->value_));

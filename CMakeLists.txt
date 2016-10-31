@@ -3,6 +3,8 @@ project (ACSL)
 # The version number.
 # set (Tutorial_VERSION_MAJOR 1)
 # set (Tutorial_VERSION_MINOR 0)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED on)
  
 include_directories(".")
 
