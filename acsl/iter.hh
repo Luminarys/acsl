@@ -87,6 +87,18 @@ class Iterator {
     return Iterator<Filter<B, F>>(Filter<B, F>(std::move(*this), std::move(func)));
   }
 
+  template<typename F>
+  usize apply(F&& func) {
+    usize count = 0;
+    Maybe<Item> cur = next();
+    while (cur.has_value()) {
+      count++;
+      func(cur.unwrap());
+      cur = next();
+    }
+    return count;
+  }
+
   template<typename C>
   C collect() {
       return C(std::move(*this));

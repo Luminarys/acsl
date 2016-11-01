@@ -7,6 +7,7 @@
 
 #include "type_traits.hh"
 #include "types.hh"
+#include "utility.hh"
 
 namespace acsl {
 
@@ -87,7 +88,8 @@ class Maybe {
       this->has_value_ = false;
       return std::move(this->value_);
     } else {
-      exit(0);
+        exit(1);
+        // panic("Empty Maybe types cannot be unwrapped!");
     }
   }
 
