@@ -7,6 +7,7 @@
 
 #include "maybe.hh"
 #include "types.hh"
+#include "utility.hh"
 #include <initializer_list>
 
 namespace acsl {
@@ -23,20 +24,18 @@ class Array {
     }
   }
 
-  Maybe<Ref<T>> operator[](usize i) {
+  T& operator[](usize i) {
     if (i >= N) {
-      return nothing;
-    } else {
-      return Maybe<Ref<T>>(std::ref(buffer_[i]));
+      panic("Out of bounds array access!");
     }
+    return buffer_[i];
   }
 
-  Maybe<CRef<T>> operator[](usize i) const {
+  T const& operator[](usize i) const {
     if (i >= N) {
-      return nothing;
-    } else {
-      return Maybe<CRef<T>>(std::cref(buffer_[i]));
+      panic("Out of bounds array access!");
     }
+    return buffer_[i];
   }
 
   template<usize I>

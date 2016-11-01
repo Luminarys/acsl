@@ -88,8 +88,7 @@ class Maybe {
       this->has_value_ = false;
       return std::move(this->value_);
     } else {
-        exit(1);
-        // panic("Empty Maybe types cannot be unwrapped!");
+      panic("Empty Maybe types cannot be unwrapped!");
     }
   }
 

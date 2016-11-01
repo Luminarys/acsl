@@ -5,10 +5,11 @@
 #ifndef ACSL_VECTOR_HH
 #define ACSL_VECTOR_HH
 
-#include "iter.hh"
+#include "iterator.hh"
 #include "maybe.hh"
 #include "type_traits.hh"
 #include "types.hh"
+#include "utility.hh"
 #include <cstring>
 #include <initializer_list>
 #include <memory>
@@ -188,12 +189,26 @@ class Vector {
     return elem_at(size_ - 1);
   }
 
-  Maybe<Ref<T>> operator[](usize i) {
+  Maybe<Ref<T>> at(usize i) {
     return elem_at(i);
   }
 
-  Maybe<CRef<T>> operator[](usize i) const {
+  Maybe<CRef<T>> at(usize i) const {
     return elem_at(i);
+  }
+
+  T& operator[](usize i) {
+    if (i < 0 || i >= size_) {
+      panic("Out of bounds access in vectory!");
+    }
+    return buffer_[i];
+  }
+
+  T const& operator[](usize i) const {
+    if (i < 0 || i >= size_) {
+      panic("Out of bounds access in vectory!");
+    }
+    return buffer_[i];
   }
 
   void clear() {
@@ -217,7 +232,7 @@ class Vector {
 
  private:
   Maybe<Ref<T>> elem_at(usize i) {
-    if (i >= size_) {
+    if (i >= size_ || i < 0) {
       return nothing;
     }
     return Maybe<Ref<T>>(std::ref(buffer_[i]));

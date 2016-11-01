@@ -8,8 +8,8 @@ TEST_CASE("Vector", "[vector]") {
   REQUIRE(v.pop() == 5);
   v.push(6);
   REQUIRE(v.pop() == 6);
-  REQUIRE(v[0].unwrap() == 1);
-  REQUIRE(v[2].unwrap() == 3);
+  REQUIRE(v[0] == 1);
+  REQUIRE(v[2] == 3);
   v.insert(0, 10);
   REQUIRE(v.first().unwrap() == 10);
   REQUIRE(v.last().unwrap() == 4);

@@ -1,4 +1,5 @@
 #include "test/catch.hh"
+#include "acsl/iterator.hh"
 #include "acsl/vector.hh"
 
 using namespace acsl;
@@ -53,9 +54,9 @@ TEST_CASE("Iterator", "[iterator]") {
   }
 
   auto v2 = range(10).collect<Vector<int>>();
-  REQUIRE(v2[0].unwrap() == 0);
+  REQUIRE(v2[0] == 0);
 
   Vector<int> v3 = {1, 2, 3, 4, 5};
   v3.iter().apply([](Ref<int> c) { c.get() *= 2; });
-  REQUIRE(v3[0].unwrap() == 2);
+  REQUIRE(v3[0] == 2);
 }

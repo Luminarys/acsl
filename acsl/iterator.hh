@@ -101,7 +101,7 @@ class Iterator {
 
   template<typename C>
   C collect() {
-      return C(std::move(*this));
+    return C(std::move(*this));
   }
 };
 
@@ -144,12 +144,12 @@ class RangeIter {
 };
 
 template<typename T>
-Iterator<RangeIter<T>> range(T&& start, T&& end) {
+inline Iterator<RangeIter<T>> range(T&& start, T&& end) {
   return Iterator<RangeIter<T>>(RangeIter<T>(std::move(start), std::move(end)));
 }
 
 template<typename T>
-Iterator<RangeIter<T>> range(T&& end) {
+inline Iterator<RangeIter<T>> range(T&& end) {
   return Iterator<RangeIter<T>>(RangeIter<T>(std::move(T()), std::move(end)));
 }
 

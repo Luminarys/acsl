@@ -6,10 +6,10 @@
 #define ACSL_UTILITY_HH
 
 namespace acsl {
-  // void panic(char* s) {
-  //     printf("PANIC: %s\n", s);
-  //     exit(1);
-  // }
+inline void panic(std::string s) {
+  printf("PANIC: %s\n", s);
+  exit(1);
+}
 }
 
 #endif //ACSL_UTILITY_HH

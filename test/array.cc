@@ -7,8 +7,8 @@ TEST_CASE("Array", "[array]") {
     Array<int, 5> a = {1, 2, 3, 4, 5};
     REQUIRE(a.at<0>() == 1);
     REQUIRE(a.at<4>() == 5);
-    a[0].unwrap().get() = 5;
-    REQUIRE(a[0].unwrap() == 5);
+    a[0] = 5;
+    REQUIRE(a[0] == 5);
     REQUIRE(a.at<0>() == 5);
 
     REQUIRE(a.front() == 5);
