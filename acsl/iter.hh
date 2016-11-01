@@ -21,6 +21,9 @@ class Map;
 template<typename B>
 class Rev;
 
+template<typename B, typename O>
+class Chain;
+
 template<typename B>
 class Iterator {
  protected:
@@ -38,6 +41,37 @@ class Iterator {
 
   RangeLoopIter<B> end() {
     return RangeLoopIter<B>();
+  }
+
+  usize count() {
+    usize count = 0;
+    while (next().has_value()) {
+      count++;
+    }
+    return count;
+  }
+
+  Maybe<Item> last() {
+    Maybe<Item> prev = nothing;
+    Maybe<Item> cur = next();
+    while (cur.has_value()) {
+      prev = std::move(cur);
+      cur = next();
+    }
+    return prev;
+  }
+
+  Maybe<Item> nth(usize n) {
+    Maybe<Item> cur = next();
+    while (n-- > 0) {
+      cur = next();
+    }
+    return cur;
+  }
+
+  template<typename O>
+  Iterator<Chain<B, O>> chain(Iterator<O>&& other) {
+    return Iterator<Chain<B, O>>(Chain<B, O>(std::move(*this), std::move(other)));
   }
 
   template<typename F>
@@ -122,8 +156,8 @@ class Map {
   Map(Iterator<B>&& it, F&& func) : iter_(it), func_(func) {}
 
   using BItem = typename Iterator<B>::Item;
-
   using Item = decltype(std::declval<F>()(std::declval<BItem>()));
+
   Maybe<Item> next() {
     return iter_.next().map(func_);
   };
@@ -138,9 +172,33 @@ class Rev {
 
   Rev(DoubleEndedIterator<B>&& it) : iter_(it) {}
 
-  using T = RemoveRef<decltype(std::declval<B>().next_back().unwrap())>;
-  Maybe<T> next() {
+  Maybe<Item> next() {
     return iter_.next_back();
+  }
+};
+
+template<typename B, typename O>
+class Chain {
+  Iterator<B> first_;
+  Iterator<O> second_;
+  bool first_valid_;
+
+ public:
+  using Item = typename B::Item;
+
+  static_assert(IsSame<Item, typename O::Item>, "Chain must be used with an iterator of the same item type");
+
+  Chain(Iterator<B>&& first, Iterator<O>&& second) : first_(first), second_(second), first_valid_(true) {}
+
+  Maybe<Item> next() {
+    if (first_valid_) {
+      Maybe<Item> i = first_.next();
+      if (i.has_value()) {
+        return i;
+      }
+      first_valid_ = false;
+    }
+    return second_.next();
   }
 };
 }

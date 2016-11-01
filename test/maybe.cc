@@ -3,14 +3,6 @@
 
 using namespace acsl;
 
-template<typename F>
-using RV = decltype(std::declval<F>()(std::declval<int>()));
-
-template<typename F>
-RV<F> f(F &&func) {
-  return func();
-}
-
 TEST_CASE("Maybe", "[maybe]") {
   Maybe<int> mi = nothing;
   REQUIRE(mi.is_none());

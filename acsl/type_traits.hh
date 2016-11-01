@@ -7,7 +7,7 @@ namespace acsl {
 template<typename, typename>
 constexpr bool IsSame = false;
 template<typename T>
-constexpr bool IsSame<T, T> = false;
+constexpr bool IsSame<T, T> = true;
 
 template<typename T>
 constexpr bool IsPod = std::is_pod<T>::value;

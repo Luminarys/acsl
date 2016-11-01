@@ -17,9 +17,8 @@ class Result {
   };
   bool has_value_;
  public:
-  static_assert(!IsSame < T, E > );
 
-  constexpr Result(Result &&o) : has_value_(o.has_value_) {
+  constexpr Result(Result&& o) : has_value_(o.has_value_) {
     if (has_value_) {
       value_ = std::move(o.value_);
     } else {
@@ -27,17 +26,17 @@ class Result {
     }
   }
 
-  Result(Result const &) = delete;
+  Result(Result const&) = delete;
 
-  constexpr Result(T &&v) : value_(std::move(v)), has_value_(true) {}
+  constexpr Result(T&& v) : value_(std::move(v)), has_value_(true) {}
 
-  constexpr Result(E &&v) : error_(std::move(v)), has_value_(false) {}
+  constexpr Result(E&& v) : error_(std::move(v)), has_value_(false) {}
 
   ~Result() {}
 
-  Result &operator=(Result const &other)  = delete;
+  Result& operator=(Result const& other)  = delete;
 
-  Result &operator=(Result &&other) {
+  Result& operator=(Result&& other) {
     this->has_value_ = other.has_value_;
     if (other.has_value_) {
       this->value_ = std::move(other.value_);
@@ -71,11 +70,11 @@ class Result {
     }
   }
 
-  Result<const T &, const E &> as_ref() const {
+  Result<const T&, const E&> as_ref() const {
     if (this->has_value_) {
-      return Result<const T &, const E &>(this->value_);
+      return Result<const T&, const E&>(this->value_);
     } else {
-      return Result<const T &, const E &>(this->error_);
+      return Result<const T&, const E&>(this->error_);
     }
   }
 
@@ -88,7 +87,7 @@ class Result {
   }
 
   template<typename F>
-  T unwrap_or_else(F &&f) {
+  T unwrap_or_else(F&& f) {
     if (this->has_value_) {
       return this->value_;
     } else {
@@ -97,7 +96,7 @@ class Result {
   }
 
   template<typename U, typename F>
-  Result<U, E> and_then(F &&f) {
+  Result<U, E> and_then(F&& f) {
     if (this->has_value_) {
       return f(this->value_);
     } else {
@@ -106,7 +105,7 @@ class Result {
   }
 
   template<typename U, typename F>
-  Result<U, E> map(F &&f) {
+  Result<U, E> map(F&& f) {
     if (this->has_value_) {
       return Result<U, E>(f(std::move(this->value_)));
     } else {

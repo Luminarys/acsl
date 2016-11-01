@@ -5,9 +5,9 @@ using namespace acsl;
 
 TEST_CASE("Iterator", "[iterator]") {
   Vector<int> v = {1, 2, 3, 4, 5};
-  auto i = v.iter();
-  REQUIRE(i.next().unwrap() == 1);
-  REQUIRE(i.next().unwrap() == 2);
+  auto i1 = v.iter();
+  REQUIRE(i1.next().unwrap() == 1);
+  REQUIRE(i1.next().unwrap() == 2);
   auto i2 = v.iter().map([](auto i) { return i * 2; });
   REQUIRE(i2.next().unwrap() == 2);
   REQUIRE(i2.next().unwrap() == 4);
@@ -40,4 +40,9 @@ TEST_CASE("Iterator", "[iterator]") {
   for (auto c : range('a', 'z')) {
     REQUIRE(c == comp++);
   }
+
+  REQUIRE(v.iter().count() == 5);
+  REQUIRE(v.iter().last().unwrap() == 5);
+
+  REQUIRE(v.iter().chain(v.iter()).count() == 10);
 }

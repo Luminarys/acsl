@@ -2,5 +2,5 @@
 #include "test/catch.hh"
 
 TEST_CASE( "Sanity", "[test]" ) {
-    REQUIRE(true == true);
+    REQUIRE(true);
 }
