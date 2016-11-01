@@ -45,4 +45,10 @@ TEST_CASE("Iterator", "[iterator]") {
   REQUIRE(v.iter().last().unwrap() == 5);
 
   REQUIRE(v.iter().chain(v.iter()).count() == 10);
+
+  counter = 0;
+  for (int i : range(10).filter([](int c) { return c % 2 == 0; })) {
+    REQUIRE(i == counter);
+    counter += 2;
+  }
 }

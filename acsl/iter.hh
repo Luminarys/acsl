@@ -15,8 +15,14 @@ namespace acsl {
 template<typename B>
 class RangeLoopIter;
 
+template<typename T>
+class NullIter;
+
 template<typename B, typename F>
 class Map;
+
+template<typename B, typename F>
+class Filter;
 
 template<typename B>
 class Rev;
@@ -40,7 +46,7 @@ class Iterator {
   }
 
   RangeLoopIter<B> end() {
-    return RangeLoopIter<B>();
+    return RangeLoopIter<B>(std::move(*this));
   }
 
   usize count() {
@@ -78,6 +84,11 @@ class Iterator {
   Iterator<Map<B, F>> map(F&& func) {
     return Iterator<Map<B, F>>(Map<B, F>(std::move(*this), std::move(func)));
   }
+
+  template<typename F>
+  Iterator<Filter<B, F>> filter(F&& func) {
+    return Iterator<Filter<B, F>>(Filter<B, F>(std::move(*this), std::move(func)));
+  }
 };
 
 template<typename B>
@@ -95,19 +106,31 @@ class DoubleEndedIterator : public Iterator<B> {
 };
 
 template<typename T>
-class RangeIter {
-  T start_, end_;
+class NullIter {
  public:
   using Item = T;
-  RangeIter(T&& start, T&& end) : start_(start), end_(end) {}
+  Maybe<T> next() { return nothing; }
+};
+
+template<typename T>
+class RangeIter {
+  T start_, end_;
+  bool rev_;
+ public:
+  using Item = T;
+  RangeIter(T&& start, T&& end) : start_(start), end_(end), rev_(false) {
+    if (start_ > end_) {
+      rev_ = true;
+      std::swap(start_, end_);
+    }
+  }
 
   Maybe<Item> next() {
     if (start_ != end_) {
-      if (start_ < end_) {
-        return Maybe<Item>(std::move(start_++));
-      } else {
-        return Maybe<Item>(std::move(start_--));
+      if (rev_) {
+        return Maybe<Item>(std::move(end_--));
       }
+      return Maybe<Item>(std::move(start_++));
     }
     return nothing;
   }
@@ -126,13 +149,13 @@ Iterator<RangeIter<T>> range(T&& end) {
 template<typename B>
 class RangeLoopIter {
   using Item = typename Iterator<B>::Item;
-  Maybe<Iterator<B>> iter_;
+  Iterator<B> iter_;
   Maybe<Item> next_;
 
  public:
   RangeLoopIter() {}
   RangeLoopIter(Iterator<B>&& iter)
-      : iter_(Maybe<Iterator<B>>(std::move(iter))), next_(iter_.as_ref().unwrap().get().next()) {}
+      : iter_(iter), next_(iter_.next()) {}
 
   Item operator*() {
     return next_.unwrap();
@@ -143,7 +166,7 @@ class RangeLoopIter {
   }
 
   void operator++() {
-    next_ = iter_.as_ref().unwrap().get().next();
+    next_ = iter_.next();
   }
 };
 
@@ -161,6 +184,25 @@ class Map {
   Maybe<Item> next() {
     return iter_.next().map(func_);
   };
+};
+
+template<typename B, typename F>
+class Filter {
+  Iterator<B> iter_;
+  F func_;
+
+ public:
+  Filter(Iterator<B>&& it, F&& func) : iter_(it), func_(func) {}
+
+  using Item = typename Iterator<B>::Item;
+
+  Maybe<Item> next() {
+    Maybe<Item> cur = nothing;
+    do {
+      cur = iter_.next();
+    } while (!cur.as_ref().map(func_).unwrap_or(true));
+    return cur;
+  }
 };
 
 template<typename B>
