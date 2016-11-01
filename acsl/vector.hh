@@ -36,7 +36,13 @@ class Vector {
 
  public:
   Vector(A const& a = A()) :
-      size_(0), capacity_(0), buffer_(nullptr), allocator_(a) {
+      size_(0), capacity_(10), buffer_(nullptr), allocator_(a) {
+    buffer_ = allocator_.allocate(10);
+  }
+
+  Vector(usize n, A const& a = A()) :
+      size_(0), capacity_(n), buffer_(nullptr), allocator_(a) {
+    buffer_ = allocator_.allocate(n);
   }
 
   Vector(usize n, T const& val = T(), A const& a = A()) :
@@ -79,6 +85,14 @@ class Vector {
     int i = 0;
     for (T e : l) {
       allocator_.construct(&buffer_[i++], std::move(e));
+    }
+  }
+
+  template<typename B>
+  Vector(Iterator<B>&& iter, A const& a = A()) : size_(0), capacity_(10), buffer_(nullptr), allocator_(a) {
+    buffer_ = allocator_.allocate(10);
+    for (auto i : iter) {
+        push(std::move(i));
     }
   }
 

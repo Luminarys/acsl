@@ -26,5 +26,9 @@ TEST_CASE("Vector", "[vector]") {
   REQUIRE(v3.first().unwrap() == 2);
   v3 = std::move(v);
   REQUIRE(v3.first().unwrap() == 10);
+
+  Vector<int> v4 = Vector<int>();
+  v4.push(10);
+  REQUIRE(v4.pop() == 10);
 }
 

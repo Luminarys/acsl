@@ -51,4 +51,7 @@ TEST_CASE("Iterator", "[iterator]") {
     REQUIRE(i == counter);
     counter += 2;
   }
+
+  auto v2 = range(10).collect<Vector<int>>();
+  REQUIRE(v2[0].unwrap() == 0);
 }

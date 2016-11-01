@@ -3,8 +3,8 @@
 // Based on Rust's Iterator trait.
 //
 
-#ifndef ACSL_RANGE_HH
-#define ACSL_RANGE_HH
+#ifndef ACSL_ITER_HH
+#define ACSL_ITER_HH
 
 #include "type_traits.hh"
 #include "types.hh"
@@ -14,9 +14,6 @@ namespace acsl {
 
 template<typename B>
 class RangeLoopIter;
-
-template<typename T>
-class NullIter;
 
 template<typename B, typename F>
 class Map;
@@ -89,6 +86,11 @@ class Iterator {
   Iterator<Filter<B, F>> filter(F&& func) {
     return Iterator<Filter<B, F>>(Filter<B, F>(std::move(*this), std::move(func)));
   }
+
+  template<typename C>
+  C collect() {
+      return C(std::move(*this));
+  }
 };
 
 template<typename B>
@@ -103,13 +105,6 @@ class DoubleEndedIterator : public Iterator<B> {
   Iterator<Rev<B>> rev() {
     return Iterator<Rev<B>>(Rev<B>(std::move(*this)));
   }
-};
-
-template<typename T>
-class NullIter {
- public:
-  using Item = T;
-  Maybe<T> next() { return nothing; }
 };
 
 template<typename T>
@@ -244,4 +239,4 @@ class Chain {
   }
 };
 }
-#endif //ACSL_RANGE_HH
+#endif //ACSL_ITER_HH
